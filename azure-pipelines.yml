@@ -1,0 +1,95 @@
+# Trigger: ejecutar el pipeline ante cada push a main
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - README.md
+
+# Variables reutilizables en todo el pipeline
+variables:
+  acrName: 'acrpython123'
+  acrLoginServer: 'acrpython123.azurecr.io'
+  imageName: 'mi-app'
+  imageTag: '$(Build.BuildId)'     # ID único por cada ejecución del pipeline
+  webAppName: 'mi-app-cicd-demo'
+  resourceGroup: 'rg-pythonapp'
+
+stages:
+
+  # ── ETAPA CI: construir, testear y publicar ──────────────────
+  - stage: CI
+    displayName: 'CI — Build, Test y Push'
+    jobs:
+      - job: BuildTestPush
+        pool:
+          vmImage: 'ubuntu-latest'   
+        steps:
+
+          # Autenticarse en el ACR
+          - task: Docker@2
+            displayName: 'Login en Azure Container Registry'
+            inputs:
+              command: login
+              containerRegistry: 'conexion-acr'
+
+          # Construir la imagen Docker
+          - task: Docker@2
+            displayName: 'Build de la imagen Docker'
+            inputs:
+              command: build
+              dockerfile: 'Dockerfile'
+              repository: '$(acrLoginServer)/$(imageName)'
+              tags: |
+                $(imageTag)
+                latest
+
+          # Ejecutar los tests dentro del contenedor
+          # Si fallan → el pipeline se detiene aquí, no se publica nada
+          - script: |
+              docker run --rm \
+                $(acrLoginServer)/$(imageName):$(imageTag) \
+                python -m pytest test_app.py -v
+            displayName: 'Ejecutar tests en el contenedor'
+
+          # Si los tests pasan → publicar la imagen en el ACR
+          - task: Docker@2
+            displayName: 'Push imagen a ACR'
+            inputs:
+              command: push
+              repository: '$(acrLoginServer)/$(imageName)'
+              tags: |
+                $(imageTag)
+                latest
+
+  # ── ETAPA CD: desplegar a producción ────────────────────────
+  - stage: CD
+    displayName: 'CD — Desplegar a producción'
+    dependsOn: CI          # Solo se ejecuta si CI tuvo éxito completo
+    condition: succeeded()
+    jobs:
+      - deployment: DeployApp
+        environment: 'produccion'   # Aquí se configura la aprobación manual
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+
+                # Actualizar la imagen en el App Service
+                - task: AzureWebAppContainer@1
+                  displayName: 'Actualizar contenedor en App Service'
+                  inputs:
+                    azureSubscription: 'conexion-azure'
+                    appName: '$(webAppName)'
+                    containers: '$(acrLoginServer)/$(imageName):$(imageTag)'
+
+                # Verificar que la aplicación arrancó correctamente
+                - script: |
+                    echo "Esperando arranque de la app..."
+                    sleep 30
+                    curl -f https://$(webAppName).azurewebsites.net/health || exit 1
+                    echo "Aplicacion en produccion correctamente"
+                  displayName: 'Health check post-deploy'
