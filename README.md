@@ -17,10 +17,6 @@
 9. [Paso 4 — Configurar Azure DevOps](#9-paso-4--configurar-azure-devops)
 10. [Paso 5 — El pipeline YAML](#10-paso-5--el-pipeline-yaml)
 11. [Paso 6 — Aprobaciones y entornos](#11-paso-6--aprobaciones-y-entornos)
-12. [Verificación end-to-end](#12-verificación-end-to-end)
-13. [Conceptos clave aprendidos](#13-conceptos-clave-aprendidos)
-14. [Recursos adicionales](#14-recursos-adicionales)
-
 ---
 
 ## 1. ¿Qué es este proyecto?
@@ -531,10 +527,6 @@ curl https://mi-app-cicd-demo.azurewebsites.net/
 curl https://mi-app-cicd-demo.azurewebsites.net/health
 curl https://mi-app-cicd-demo.azurewebsites.net/suma/10/5
 ```
-
-
-
-## Autor
 
 Proyecto desarrollado como ejercicio de aprendizaje de Docker, CI/CD y Azure DevOps.
 
