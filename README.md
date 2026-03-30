@@ -483,12 +483,6 @@ stages:
 4. Configuración: **Existing Azure Pipelines YAML file**
 5. Selecciona `/azure-pipelines.yml` → **Continue** → **Run**
 
-<!-- 📸 CAPTURA SUGERIDA: Pipeline ejecutándose en Azure DevOps, mostrando los pasos de la etapa CI en verde -->
-
-<!-- 📸 CAPTURA SUGERIDA: Log detallado del paso "Ejecutar tests en el contenedor" mostrando "3 passed" -->
-
-<!-- 📸 CAPTURA SUGERIDA: Azure Container Registry mostrando el repositorio "mi-app" con los tags de imagen -->
-
 ---
 
 ## 11. Paso 6 — Aprobaciones y entornos
@@ -503,7 +497,6 @@ Los Environments de Azure DevOps permiten pausar el pipeline antes de desplegar 
 4. **+ Add check** → selecciona **Approvals**
 5. Añade tu usuario como aprobador → timeout: 24 horas → **Create**
 
-<!-- 📸 CAPTURA SUGERIDA: Pantalla de "Approvals and checks" del environment "produccion" con el aprobador configurado -->
 
 ### ¿Qué ocurre en la próxima ejecución?
 
@@ -513,10 +506,6 @@ Cuando el pipeline llegue a la etapa CD:
 2. El pipeline queda **pausado** — puede esperar horas sin problema
 3. El aprobador entra a Azure DevOps, revisa y hace clic en **Approve**
 4. El despliegue continúa automáticamente
-
-<!-- 📸 CAPTURA SUGERIDA: Banner de aprobación pendiente en Azure DevOps con el botón "Review" -->
-
-<!-- 📸 CAPTURA SUGERIDA: Diálogo de aprobación con el botón "Approve" y campo de comentario -->
 
 ---
 
@@ -543,67 +532,10 @@ curl https://mi-app-cicd-demo.azurewebsites.net/health
 curl https://mi-app-cicd-demo.azurewebsites.net/suma/10/5
 ```
 
-### Simular un fallo de tests (demostración de seguridad)
 
-```python
-# Añade esto a test_app.py y haz push:
-def test_que_falla(client):
-    assert 1 == 2  # Siempre falla
-```
-
-El pipeline fallará en la etapa de tests → **no se publicará ninguna imagen** → **nada llegará a producción**. Esta es la protección más importante del CI/CD.
-
-<!-- 📸 CAPTURA SUGERIDA: Pipeline con la etapa CI en rojo por fallo de tests, y la etapa CD sin ejecutarse -->
-
-### Verificar el historial de imágenes en el ACR
-
-```bash
-# Listar todas las imágenes publicadas
-az acr repository show-tags \
-  --name miappcicdacr \
-  --repository mi-app \
-  --orderby time_desc \
-  --output table
-```
-
-<!-- 📸 CAPTURA SUGERIDA: Portal Azure → ACR → Repositorios, mostrando el listado de tags por build -->
-
----
-
-## 13. Conceptos clave aprendidos
-
-### CI — Integración Continua
-Práctica de integrar cambios de código frecuentemente y verificarlos con tests automáticos. Detecta errores rápido, antes de que se acumulen.
-
-### CD — Entrega Continua
-Extensión del CI que automatiza el proceso de despliegue. El código que pasa los tests puede llegar a producción con mínima intervención manual.
-
-### Docker y la inmutabilidad
-Cada imagen tiene un tag único (el `BuildId`). Esto significa que siempre podemos volver a una versión anterior exacta, y que lo que se despliega en producción es exactamente lo mismo que se testó en CI.
-
-### Infrastructure as Code (IaC)
-El pipeline está definido en un archivo YAML que vive en el repositorio. Los cambios al pipeline tienen historial, se pueden revisar en PRs y se pueden revertir como cualquier otro cambio de código.
-
-### Aprobaciones como control de calidad
-La aprobación manual no es una limitación — es una decisión consciente de que alguien con contexto revise antes de afectar a usuarios reales.
-
----
-
-## 14. Recursos adicionales
-
-- [Documentación oficial Azure Pipelines](https://learn.microsoft.com/es-es/azure/devops/pipelines/)
-- [Documentación Azure Container Registry](https://learn.microsoft.com/es-es/azure/container-registry/)
-- [Documentación Azure App Service (contenedores)](https://learn.microsoft.com/es-es/azure/app-service/configure-custom-container)
-- [Flask — documentación oficial](https://flask.palletsprojects.com/)
-- [Docker — guía de buenas prácticas para Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
-- [pytest — documentación oficial](https://docs.pytest.org/)
-
----
 
 ## Autor
 
 Proyecto desarrollado como ejercicio de aprendizaje de Docker, CI/CD y Azure DevOps.
 
 ---
-
-*Última actualización: Marzo 2026*
